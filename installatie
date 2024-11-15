@@ -1,0 +1,67 @@
+Maak gebruik van desktop experience bij de installatie van de powershell server. Dan kun je gebruik maken van notepad en kun je gelijk zien of je alles goed hebt gedaan.
+
+C:
+Cd\
+Mkdir Data
+CD .\ Data
+
+# Per groep
+New-SmbShare Directie -Path c:\Data\Directie
+
+# command voor servernaam
+Hostname
+
+SConfig
+Optie 2: Servernaam aanpassen
+Optie 8: Netwerk aanpassen (Default gateway moet (ingestelde IP kun je invoeren tenzij anders aangegeven)
+Optie 9: Is tijd aanpassen
+Optie 13: Opnieuw opstarten
+
+
+
+
+
+
+
+
+
+
+
+
+# install features
+
+Install-WindowsFeature -Name AD-Domain-Services, DNS -IncludeManagementTools
+
+Get-WindowsFeature
+
+CLS
+
+Install-ADDSForest -DomainName ‘powershell.dc’ -InstallDNS -DomainNetBIOSName powershell2
+
+CD\
+
+# doe al deze stappen bij alle mappen die je aanmaakt
+New-ADOrganizationalUnit -Name ‘Powershell’ -Path "OU=Powershell,DC=Powershell,DC=DC"
+
+New-ADGroup -name Administratie -Path “OU=Administratie, OU=Powershell,DC=Powershell,DC=DC”
+Groupscope = 1
+New-AdUser Piet -Path “OU=Directie,DC=Powershell,DC=DC”
+ADD-ADGroupMember -identity Directie -Members Piet
+
+Get-SMBShare
+
+CLS
+
+ICACLS "C:\Data\Administratie" /Grant "Administratie:(OI)(CI)M"
+# voor het toevoegen van de ou directie aan de map gebuik je RX inplaats van M
+
+ICACLS “C:\Data\Administratie” /inheritance:D
+ICACLS "C:\Data\Administratie" /Remove users
+
+Remove-SmbShare -Name "Administratie"
+
+New-SMBShare Administratie -Path C:\Data\Administratie -change access everyone
+
+
+#Toevoegen computer in domein
+Add-Computer -DomainName "Examenserver.com" -Credential (Get-Credential) -Restart
