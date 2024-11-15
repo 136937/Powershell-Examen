@@ -1,0 +1,2 @@
+voornaam;achternaam;username;SecurityGroup;ou
+Piet;Jansen;P.Jansen;Administratie;OU=Administratie,DC=Go4Stones,DC=org
