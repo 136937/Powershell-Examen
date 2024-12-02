@@ -1,0 +1,36 @@
+# Definieer de basisdirectory waar de homedrives moeten worden opgeslagen
+$HomeDriveBasePath = "\\server\homedrives"
+
+# Laad de Active Directory-module
+Import-Module ActiveDirectory
+
+# Haal alle gebruikers op uit Active Directory
+$Users = Get-ADUser -Filter * -Property DisplayName, SamAccountName, HomeDirectory
+
+foreach ($User in $Users) {
+    # Haal de gegevens van de gebruiker op
+    $DisplayName = $User.DisplayName
+    $SamAccountName = $User.SamAccountName
+    $HomeDirectory = $User.HomeDirectory
+
+    # Controleer of de gebruiker een homedrive heeft
+    if (-not $HomeDirectory -or -not (Test-Path $HomeDirectory)) {
+        # Definieer het pad voor de nieuwe homedrive
+        $NewHomeDrivePath = Join-Path -Path $HomeDriveBasePath -ChildPath $DisplayName
+
+        # Controleer of de map al bestaat
+        if (-not (Test-Path $NewHomeDrivePath)) {
+            # Maak de map aan
+            New-Item -ItemType Directory -Path $NewHomeDrivePath
+            Write-Output "Homedrive aangemaakt voor gebruiker $DisplayName op locatie $NewHomeDrivePath"
+        } else {
+            Write-Output "Map bestaat al voor gebruiker $DisplayName op locatie $NewHomeDrivePath"
+        }
+
+        # Stel de homedrive in in Active Directory
+        Set-ADUser -Identity $SamAccountName -HomeDirectory $NewHomeDrivePath -HomeDrive Z:
+        Write-Output "Homedrive ingesteld voor gebruiker $DisplayName"
+    } else {
+        Write-Output "Gebruiker $DisplayName heeft al een homedrive: $HomeDirectory"
+    }
+}
