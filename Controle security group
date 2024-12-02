@@ -1,0 +1,28 @@
+# Laad de Active Directory-module
+Import-Module ActiveDirectory
+
+# Haal alle gebruikers op uit Active Directory
+$Users = Get-ADUser -Filter * -Property MemberOf, DistinguishedName
+
+foreach ($User in $Users) {
+    # Haal de gegevens van de gebruiker op
+    $SamAccountName = $User.SamAccountName
+    $DistinguishedName = $User.DistinguishedName
+
+    # Haal de OU van de gebruiker op
+    $UserOU = ($DistinguishedName -split ',OU=')[1..($DistinguishedName -split ',OU=').Count] -join ',OU=' -replace ',CN=.*', ''
+
+    # Zoek een security group in dezelfde OU
+    $SecurityGroups = Get-ADGroup -Filter * -SearchBase "OU=$UserOU" -Property GroupCategory | Where-Object { $_.GroupCategory -eq "Security" }
+
+    foreach ($SecurityGroup in $SecurityGroups) {
+        # Controleer of de gebruiker al lid is van de groep
+        if (-not (Get-ADGroupMember -Identity $SecurityGroup.DistinguishedName | Where-Object { $_.DistinguishedName -eq $User.DistinguishedName })) {
+            # Voeg de gebruiker toe aan de groep
+            Add-ADGroupMember -Identity $SecurityGroup.DistinguishedName -Members $User.DistinguishedName
+            Write-Output "Gebruiker $SamAccountName is toegevoegd aan de groep $($SecurityGroup.Name)"
+        } else {
+            Write-Output "Gebruiker $SamAccountName is al lid van de groep $($SecurityGroup.Name)"
+        }
+    }
+}
