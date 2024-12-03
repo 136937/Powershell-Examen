@@ -1,0 +1,1 @@
+Server01 en Server02 zijn gekoppeld aan elkaar. Met nslookup zien ze elkaars domain. De dns en dhcp klopt ook. en onder AD staan ze beide onder domain controllers van examen136937.com. De foutmelding die ik krijg wanneer ik de users aanmaak is the server is unwilling to process the request.
